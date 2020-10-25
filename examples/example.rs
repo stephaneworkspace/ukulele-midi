@@ -51,6 +51,7 @@ fn main() {
             writer.push(&message);
         }
         let _ = writer.write(&path);
+        let _ = writer.write_buffer();
     }
 
     // parse example

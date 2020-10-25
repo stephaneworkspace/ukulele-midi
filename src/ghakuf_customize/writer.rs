@@ -1,7 +1,7 @@
 use byteorder::{BigEndian, WriteBytesExt};
 use ghakuf::formats::*;
 use ghakuf::messages::*;
-use std::io::Write;
+use std::io::{Cursor, Read, Seek, SeekFrom, Write};
 use std::{fs, io, path};
 
 /// `ghakuf`'s SMF builder.
@@ -254,7 +254,8 @@ impl<'a> Writer<'a> {
         file.write_u16::<BigEndian>(self.track_number())?;
         file.write_u16::<BigEndian>(self.time_base)?;
         let mut track_len_filo = self.track_len_filo();
-        if self.messages.len() > 0 && *self.messages[0] != Message::TrackChange {
+        if self.messages.len() > 0 && *self.messages[0] != Message::TrackChange
+        {
             file.write(&Message::TrackChange.binary())?;
             file.write_u32::<BigEndian>(track_len_filo.pop().unwrap() as u32)?;
         }
@@ -263,7 +264,9 @@ impl<'a> Writer<'a> {
             match **message {
                 Message::TrackChange => {
                     file.write(&Message::TrackChange.binary())?;
-                    file.write_u32::<BigEndian>(track_len_filo.pop().unwrap() as u32)?;
+                    file.write_u32::<BigEndian>(
+                        track_len_filo.pop().unwrap() as u32
+                    )?;
                     pre_status_byte = None;
                     debug!("wrote track change");
                 }
@@ -275,10 +278,14 @@ impl<'a> Writer<'a> {
                     let delta_time = VLQ::new(delta_time);
                     let tmp_status_byte = (*event).status_byte();
                     match pre_status_byte {
-                        Some(pre_status_byte) if pre_status_byte == tmp_status_byte => {
+                        Some(pre_status_byte)
+                            if pre_status_byte == tmp_status_byte =>
+                        {
                             let tmp_message = message.binary();
                             file.write(&tmp_message[0..delta_time.len()])?;
-                            file.write(&message.binary()[delta_time.len() + 1..])?;
+                            file.write(
+                                &message.binary()[delta_time.len() + 1..],
+                            )?;
                             trace!("wrote some message with running status");
                         }
                         _ => {
@@ -298,6 +305,81 @@ impl<'a> Writer<'a> {
         }
         Ok(file.flush()?)
     }
+
+    pub fn write_buffer(&self) -> Result<(), io::Error> {
+        debug!("start writing in ram");
+        /*let mut file = io::BufWriter::new(
+            fs::OpenOptions::new()
+                .write(true)
+                .truncate(true)
+                .create(true)
+                .open(path)?,
+        );*/
+        let mut c = Cursor::new(Vec::new());
+
+        c.write(Tag::Header.binary())?;
+        c.write(&[0, 0, 0, 6])?;
+        c.write(&self.format.binary())?;
+        c.write_u16::<BigEndian>(self.track_number())?;
+        c.write_u16::<BigEndian>(self.time_base)?;
+        let mut track_len_filo = self.track_len_filo();
+        if self.messages.len() > 0 && *self.messages[0] != Message::TrackChange
+        {
+            c.write(&Message::TrackChange.binary())?;
+            c.write_u32::<BigEndian>(track_len_filo.pop().unwrap() as u32)?;
+        }
+        let mut pre_status_byte: Option<u8> = None;
+        for message in &self.messages {
+            match **message {
+                Message::TrackChange => {
+                    c.write(&Message::TrackChange.binary())?;
+                    c.write_u32::<BigEndian>(
+                        track_len_filo.pop().unwrap() as u32
+                    )?;
+                    pre_status_byte = None;
+                    debug!("wrote track change");
+                }
+                Message::MidiEvent {
+                    delta_time,
+                    ref event,
+                    ..
+                } => {
+                    let delta_time = VLQ::new(delta_time);
+                    let tmp_status_byte = (*event).status_byte();
+                    match pre_status_byte {
+                        Some(pre_status_byte)
+                            if pre_status_byte == tmp_status_byte =>
+                        {
+                            let tmp_message = message.binary();
+                            c.write(&tmp_message[0..delta_time.len()])?;
+                            c.write(&message.binary()[delta_time.len() + 1..])?;
+                            trace!("wrote some message with running status");
+                        }
+                        _ => {
+                            c.write(&message.binary())?;
+                            trace!("wrote some message");
+                            if self.running_status {
+                                pre_status_byte = Some(tmp_status_byte);
+                            }
+                        }
+                    };
+                }
+                _ => {
+                    c.write(&message.binary())?;
+                    trace!("wrote some message");
+                }
+            }
+        }
+
+        // Read the "file's" contents into a vector
+        c.seek(SeekFrom::Start(0)).unwrap();
+        let mut out = Vec::new();
+        c.read_to_end(&mut out).unwrap();
+
+        println!("{:?}", out);
+
+        Ok(c.flush()?)
+    }
     fn track_len_filo(&self) -> Vec<usize> {
         // First In Last Out
         let mut tracks_len: Vec<usize> = vec![0];
@@ -312,7 +394,9 @@ impl<'a> Writer<'a> {
                     tracks_len[0] += message.len();
                     let tmp_status_byte = (*event).status_byte();
                     match pre_status_byte {
-                        Some(pre_status_byte) if pre_status_byte == tmp_status_byte => {
+                        Some(pre_status_byte)
+                            if pre_status_byte == tmp_status_byte =>
+                        {
                             tracks_len[0] -= 1;
                         }
                         _ => {
@@ -330,7 +414,9 @@ impl<'a> Writer<'a> {
         tracks_len
     }
     fn track_number(&self) -> u16 {
-        let mut number = if self.messages.len() > 0 && *self.messages[0] != Message::TrackChange {
+        let mut number = if self.messages.len() > 0
+            && *self.messages[0] != Message::TrackChange
+        {
             1
         } else {
             0
