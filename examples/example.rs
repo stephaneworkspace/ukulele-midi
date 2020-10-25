@@ -11,7 +11,7 @@ const INTERVAL: u32 = 192;
 fn ext() -> Vec<u8> {
     InterfaceWasm::chord_list_experimental("C", "m", 0 as u8)
         .iter()
-        .map(|x| x + 12)
+        .map(|x| x + 0)
         .collect()
 }
 
@@ -159,6 +159,8 @@ fn main() {
     if write_messages == read_messages {
         println!("Correct I/O has done!");
     }
+
+    assert_eq!(ext(), vec![0x2c, 0x24, 0x29, 0x30]);
 }
 
 struct HogeHandler<'a> {
