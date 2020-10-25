@@ -9,7 +9,6 @@ use ukulele_midi::ukulele::{ArpPatern, Arpegiator, Chord, Ukulele};
 
 fn ext() -> Vec<u8> {
     InterfaceWasm::chord_list_experimental("F", "m", 0 as u8)
-    //       A
     //       .iter()
     //       .map(|x| x - 24)
     //       .collect()
