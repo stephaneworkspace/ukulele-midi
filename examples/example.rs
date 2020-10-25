@@ -6,8 +6,106 @@ use ghakuf::reader::*;
 use ghakuf::writer::*;
 use std::path;
 
+const INTERVAL: u32 = 192;
+
 fn ext() -> Vec<u8> {
     InterfaceWasm::chord_list_experimental("C", "m", 0 as u8)
+        .iter()
+        .map(|x| x + 12)
+        .collect()
+}
+
+struct Ukulele {
+    semitones: Vec<u8>,
+}
+
+impl Ukulele {
+    fn new(semitones: Vec<u8>) -> Self {
+        Self { semitones }
+    }
+}
+
+trait Chord {
+    fn chord(&self) -> Vec<Message>;
+}
+
+impl Chord for Ukulele {
+    fn chord(&self) -> Vec<Message> {
+        let mut write_messages: Vec<Message> = Vec::new();
+        for (i, s) in self.semitones.iter().enumerate() {
+            write_messages.push(Message::MidiEvent {
+                delta_time: 0,
+                event: MidiEvent::NoteOn {
+                    ch: i as u8,
+                    note: s.clone(),
+                    velocity: 0x7f,
+                },
+            });
+        }
+        for (i, s) in self.semitones.iter().enumerate() {
+            write_messages.push(Message::MidiEvent {
+                delta_time: INTERVAL,
+                event: MidiEvent::NoteOn {
+                    ch: i as u8,
+                    note: s.clone(),
+                    velocity: 0,
+                },
+            });
+        }
+        write_messages
+    }
+}
+
+enum ArpPatern {
+    OneTwoThreeFour,
+    OneThreeTwoThreeFourThreeTwo,
+}
+
+type UkuleleString = usize;
+
+impl ArpPatern {
+    fn pattern(&self) -> Vec<UkuleleString> {
+        match self {
+            ArpPatern::OneTwoThreeFour => vec![1, 2, 3, 4],
+            ArpPatern::OneThreeTwoThreeFourThreeTwo => vec![1, 3, 2, 3, 4, 3, 2, 3],
+        }
+        .iter()
+        .map(|x| x - 1)
+        .collect()
+    }
+}
+
+trait Arpegiator {
+    fn arp(&self, pattern: ArpPatern, repeat: u32) -> Vec<Message>;
+}
+
+impl Arpegiator for Ukulele {
+    fn arp(&self, pattern: ArpPatern, repeat: u32) -> Vec<Message> {
+        let mut write_messages: Vec<Message> = Vec::new();
+        for _ in 0..repeat {
+            for ptn in pattern.pattern().iter() {
+                for (_, semitones) in ext().iter().enumerate().filter(|(x, _)| x == ptn) {
+                    write_messages.push(Message::MidiEvent {
+                        delta_time: 0,
+                        event: MidiEvent::NoteOn {
+                            ch: 0,
+                            note: semitones.clone(),
+                            velocity: 0x7f,
+                        },
+                    });
+                    write_messages.push(Message::MidiEvent {
+                        delta_time: INTERVAL,
+                        event: MidiEvent::NoteOn {
+                            ch: 0,
+                            note: semitones.clone(),
+                            velocity: 0,
+                        },
+                    });
+                }
+            }
+        }
+        write_messages
+    }
 }
 
 fn main() {
@@ -25,27 +123,10 @@ fn main() {
         data: Vec::new(),
     });
     write_messages.push(Message::TrackChange);
-    const INTERVAL: u32 = 192;
-    for (i, semitones) in ext().iter().enumerate() {
-        let delta_time = INTERVAL * i as u32;
-        write_messages.push(Message::MidiEvent {
-            delta_time,
-            event: MidiEvent::NoteOn {
-                ch: 0,
-                note: semitones.clone(),
-                velocity: 0x7f,
-            },
-        });
-        let delta_time = INTERVAL * (i as u32 + 1);
-        write_messages.push(Message::MidiEvent {
-            delta_time,
-            event: MidiEvent::NoteOn {
-                ch: 0,
-                note: semitones.clone(),
-                velocity: 0,
-            },
-        });
-    }
+    let ukulele = Ukulele::new(ext());
+    write_messages.append(&mut ukulele.chord());
+    write_messages.append(&mut ukulele.arp(ArpPatern::OneThreeTwoThreeFourThreeTwo, 4));
+    write_messages.append(&mut ukulele.arp(ArpPatern::OneTwoThreeFour, 4));
     write_messages.push(Message::MetaEvent {
         delta_time: 0,
         event: MetaEvent::EndOfTrack,
