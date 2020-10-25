@@ -1,3 +1,6 @@
+pub mod hodge;
+pub mod ukulele;
+
 #[cfg(test)]
 mod tests {
     #[test]
