@@ -8,6 +8,12 @@ use ukulele_midi::ghakuf_customize::writer::*;
 //use ukulele_midi::hodge::HogeHandler;
 use ukulele_midi::ukulele::{ArpPatern, Arpegiator, Chord, Ukulele};
 
+use std::io::Cursor;
+use synthrs::midi;
+use synthrs::synthesizer::{make_samples_from_midi, quantize_samples};
+use synthrs::wave;
+use synthrs::writer::write_wav_file;
+
 fn ext() -> Vec<u8> {
     InterfaceWasm::chord_list_experimental("F", "m", 0 as u8)
     //       .iter()
@@ -20,9 +26,23 @@ fn main() {
         data: &mut Vec::new(),
     };
     match midi.generate_midi() {
-        Ok(()) => println!("Ok {:?}", midi.data),
+        Ok(()) => println!("Ok"),
         Err(err) => panic!("Error: {}", err),
     };
+
+    let midi_u8: &[u8] = &midi.data;
+    let mut cursor = Cursor::new(midi_u8);
+
+    let song = midi::read_midi(&mut cursor).unwrap();
+    write_wav_file(
+        "examples/example.wav",
+        44_100,
+        &quantize_samples::<i16>(
+            &make_samples_from_midi(wave::square_wave, 44_100, false, song)
+                .unwrap(),
+        ),
+    )
+    .expect("failed");
 }
 
 pub struct Midi<'a> {
