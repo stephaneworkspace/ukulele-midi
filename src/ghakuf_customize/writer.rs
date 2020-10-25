@@ -1,7 +1,7 @@
 use byteorder::{BigEndian, WriteBytesExt};
 use ghakuf::formats::*;
 use ghakuf::messages::*;
-use std::io::{Cursor, Read, Seek, SeekFrom, Write};
+use std::io::{Cursor, /*Read, Seek, SeekFrom,*/ Write};
 use std::{fs, io, path};
 
 /// `ghakuf`'s SMF builder.
@@ -306,7 +306,9 @@ impl<'a> Writer<'a> {
         Ok(file.flush()?)
     }
 
-    pub fn write_buffer(&self) -> Result<Vec<u8>, io::Error> {
+    /*-> Result<&'a [u8], io::Error>*/
+    //pub fn write_buffer(&self, data: &mut Vec<u8>) -> Result<(), io::Error> {
+    pub fn write_buffer(&self, data: &'a mut Vec<u8>) -> Result<(), io::Error> {
         debug!("start writing in ram");
         /*let mut file = io::BufWriter::new(
             fs::OpenOptions::new()
@@ -315,7 +317,7 @@ impl<'a> Writer<'a> {
                 .create(true)
                 .open(path)?,
         );*/
-        let mut c = Cursor::new(Vec::new());
+        let mut c = Cursor::new(&mut *data);
 
         c.write(Tag::Header.binary())?;
         c.write(&[0, 0, 0, 6])?;
@@ -372,16 +374,17 @@ impl<'a> Writer<'a> {
         }
 
         // Return on top
-        c.seek(SeekFrom::Start(0)).unwrap();
+        //c.seek(SeekFrom::Start(0)).unwrap();
 
         // Read the "file's" contents into a vector
-        let mut out = Vec::new();
-        c.read_to_end(&mut out).unwrap();
+        //let mut out = Vec::new();
+        //c.read_to_end(&mut out).unwrap();
 
         //println!("{:?}", out);
 
-        c.flush()?;
-        Ok(out)
+        Ok(c.flush()?)
+
+        //Ok(&out[..])
     }
     fn track_len_filo(&self) -> Vec<usize> {
         // First In Last Out
