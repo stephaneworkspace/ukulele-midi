@@ -1,63 +1,56 @@
 extern crate ghakuf;
-
+use chartgeneratorsvg::interface::InterfaceWasm;
+use chartgeneratorsvg::interface::TraitChord;
 use ghakuf::messages::*;
 use ghakuf::reader::*;
 use ghakuf::writer::*;
 use std::path;
 
+fn ext() -> Vec<u8> {
+    InterfaceWasm::chord_list_experimental("C", "m", 0 as u8)
+}
+
 fn main() {
     // sample messages
     let tempo: u32 = 60 * 1000000 / 102; //bpm:102
-    let write_messages: Vec<Message> = vec![
-        Message::MetaEvent {
-            delta_time: 0,
-            event: MetaEvent::SetTempo,
-            data: [(tempo >> 16) as u8, (tempo >> 8) as u8, tempo as u8].to_vec(),
-        },
-        Message::MetaEvent {
-            delta_time: 0,
-            event: MetaEvent::EndOfTrack,
-            data: Vec::new(),
-        },
-        Message::TrackChange,
-        Message::MidiEvent {
-            delta_time: 0,
+    let mut write_messages: Vec<Message> = Vec::new();
+    write_messages.push(Message::MetaEvent {
+        delta_time: 0,
+        event: MetaEvent::SetTempo,
+        data: [(tempo >> 16) as u8, (tempo >> 8) as u8, tempo as u8].to_vec(),
+    });
+    write_messages.push(Message::MetaEvent {
+        delta_time: 0,
+        event: MetaEvent::EndOfTrack,
+        data: Vec::new(),
+    });
+    write_messages.push(Message::TrackChange);
+    const INTERVAL: u32 = 192;
+    for (i, semitones) in ext().iter().enumerate() {
+        let delta_time = INTERVAL * i as u32;
+        write_messages.push(Message::MidiEvent {
+            delta_time,
             event: MidiEvent::NoteOn {
                 ch: 0,
-                note: 0x2d,
+                note: semitones.clone(),
                 velocity: 0x7f,
             },
-        },
-        Message::MidiEvent {
-            delta_time: 192,
+        });
+        let delta_time = INTERVAL * (i as u32 + 1);
+        write_messages.push(Message::MidiEvent {
+            delta_time,
             event: MidiEvent::NoteOn {
                 ch: 0,
-                note: 0x2d,
+                note: semitones.clone(),
                 velocity: 0,
             },
-        },
-        Message::MidiEvent {
-            delta_time: 192,
-            event: MidiEvent::NoteOn {
-                ch: 0,
-                note: 0x09,
-                velocity: 0x7f,
-            },
-        },
-        Message::MidiEvent {
-            delta_time: 392,
-            event: MidiEvent::NoteOn {
-                ch: 0,
-                note: 0x09,
-                velocity: 0,
-            },
-        },
-        Message::MetaEvent {
-            delta_time: 0,
-            event: MetaEvent::EndOfTrack,
-            data: Vec::new(),
-        },
-    ];
+        });
+    }
+    write_messages.push(Message::MetaEvent {
+        delta_time: 0,
+        event: MetaEvent::EndOfTrack,
+        data: Vec::new(),
+    });
     let mut read_messages: Vec<Message> = Vec::new();
 
     // build example
