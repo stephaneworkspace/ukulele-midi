@@ -306,7 +306,7 @@ impl<'a> Writer<'a> {
         Ok(file.flush()?)
     }
 
-    pub fn write_buffer(&self) -> Result<(), io::Error> {
+    pub fn write_buffer(&self) -> Result<Vec<u8>, io::Error> {
         debug!("start writing in ram");
         /*let mut file = io::BufWriter::new(
             fs::OpenOptions::new()
@@ -371,14 +371,17 @@ impl<'a> Writer<'a> {
             }
         }
 
-        // Read the "file's" contents into a vector
+        // Return on top
         c.seek(SeekFrom::Start(0)).unwrap();
+
+        // Read the "file's" contents into a vector
         let mut out = Vec::new();
         c.read_to_end(&mut out).unwrap();
 
-        println!("{:?}", out);
+        //println!("{:?}", out);
 
-        Ok(c.flush()?)
+        c.flush()?;
+        Ok(out)
     }
     fn track_len_filo(&self) -> Vec<usize> {
         // First In Last Out

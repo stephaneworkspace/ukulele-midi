@@ -11,3 +11,7 @@ ghakuf = "0.5.6"
 byteorder = "1"
 log = "0.4"
 chartgeneratorsvg = { git = "ssh://git@github.com/stephaneworkspace/chartgeneratorsvg.git" }
+
+[dependencies.synthrs]
+git = "ssh://git@github.com/stephaneworkspace/synthrs.git"
+rev = "265ca00"
