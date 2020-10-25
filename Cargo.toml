@@ -8,4 +8,6 @@ edition = "2018"
 
 [dependencies]
 ghakuf = "0.5.6"
+byteorder = "1"
+log = "0.4"
 chartgeneratorsvg = { git = "ssh://git@github.com/stephaneworkspace/chartgeneratorsvg.git" }

@@ -2,8 +2,9 @@ use chartgeneratorsvg::interface::InterfaceWasm;
 use chartgeneratorsvg::interface::TraitChord;
 use ghakuf::messages::*;
 use ghakuf::reader::*;
-use ghakuf::writer::*;
+//use ghakuf::writer::*; // In version 0.5.6 only wirte in harddrive, i need to write in file
 use std::path;
+use ukulele_midi::ghakuf_customize::writer::*;
 use ukulele_midi::hodge::HogeHandler;
 use ukulele_midi::ukulele::{ArpPatern, Arpegiator, Chord, Ukulele};
 
@@ -31,7 +32,8 @@ fn main() {
     write_messages.push(Message::TrackChange);
     let ukulele = Ukulele::new(ext());
     write_messages.append(&mut ukulele.chord());
-    write_messages.append(&mut ukulele.arp(ArpPatern::OneThreeTwoThreeFourThreeTwo, 4));
+    write_messages
+        .append(&mut ukulele.arp(ArpPatern::OneThreeTwoThreeFourThreeTwo, 4));
     write_messages.append(&mut ukulele.arp(ArpPatern::OneTwoThreeFour, 4));
     write_messages.push(Message::MetaEvent {
         delta_time: 0,

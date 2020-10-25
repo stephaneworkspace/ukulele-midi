@@ -1,3 +1,7 @@
+#[macro_use]
+extern crate log;
+
+pub mod ghakuf_customize;
 pub mod hodge;
 pub mod ukulele;
 
