@@ -15,3 +15,7 @@ chartgeneratorsvg = { git = "ssh://git@github.com/stephaneworkspace/chartgenerat
 [dependencies.synthrs]
 git = "ssh://git@github.com/stephaneworkspace/synthrs.git"
 rev = "265ca00"
+
+[dependencies.sdl2]
+#features = ["use_mac_framework"]
+version = "0.34.3"
