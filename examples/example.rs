@@ -6,8 +6,19 @@ use sdl2::audio::{AudioCallback, AudioSpecDesired, AudioSpecWAV};
 
 use ukulele_midi::SoundBytes;
 
+use chartgeneratorsvg::interface::InterfaceWasm;
+use chartgeneratorsvg::interface::TraitChord;
+
+fn ext() -> Vec<u8> {
+    InterfaceWasm::chord_list_experimental("F", "m", 0 as u8)
+    //       .iter()
+    //       .map(|x| x - 24)
+    //       .collect()
+}
+
 fn main() {
     let mut sb: SoundBytes = SoundBytes {
+        semitones_midi: &ext()[..],
         midi: &mut Vec::new(),
         wav: &mut Vec::new(),
     };

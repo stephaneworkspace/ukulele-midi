@@ -6,8 +6,6 @@ pub mod hodge;
 pub mod synthrs_customize;
 pub mod ukulele;
 
-use chartgeneratorsvg::interface::InterfaceWasm;
-use chartgeneratorsvg::interface::TraitChord;
 use ghakuf::messages::*;
 use ghakuf_customize::writer::*;
 use std::io::Cursor;
@@ -17,14 +15,8 @@ use synthrs::wave;
 use synthrs_customize::write_wav_buffer;
 pub use ukulele::{ArpPatern, Arpegiator, Chord, Ukulele};
 
-fn ext() -> Vec<u8> {
-    InterfaceWasm::chord_list_experimental("F", "m", 0 as u8)
-    //       .iter()
-    //       .map(|x| x - 24)
-    //       .collect()
-}
-
 pub struct SoundBytes<'a> {
+    pub semitones_midi: &'a [u8],
     pub midi: &'a mut Vec<u8>,
     pub wav: &'a mut Vec<u8>,
 }
@@ -55,7 +47,7 @@ impl<'a> SoundBytes<'a> {
             data: Vec::new(),
         });
         write_messages.push(Message::TrackChange);
-        let ukulele = Ukulele::new(ext());
+        let ukulele = Ukulele::new(&self.semitones_midi[..]);
         write_messages.append(&mut ukulele.chord());
         write_messages.append(
             &mut ukulele.arp(ArpPatern::OneThreeTwoThreeFourThreeTwo, 4),
