@@ -9,6 +9,8 @@ use std::{fs, io, path};
 /// Edit from e2838a6 on Jan 27 2020 crate version (0.5.6)
 /// https://github.com/acknak/ghakuf/blob/master/src/writer.rs
 ///
+/// I can't implement a Trait with this code, so this is a copy paste
+///
 /// This builds SMF by Message enums and write out. Message enum consists of MetaEvent, MidiEvent, SysExEvent, and TrackChange. You can use running status if you want. At track change, you should use not only MetaEvent::EndOfTrack message, but also TrackChange message.
 ///
 /// # Examples
