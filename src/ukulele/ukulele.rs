@@ -52,6 +52,7 @@ type UkuleleString = usize;
 impl ArpPatern {
     fn pattern(&self) -> Vec<UkuleleString> {
         match self {
+            // TODO check number of string in &[u8]
             ArpPatern::OneTwoThreeFour => vec![1, 2, 3, 4],
             ArpPatern::OneThreeTwoThreeFourThreeTwo => {
                 vec![1, 3, 2, 3, 4, 3, 2, 3]

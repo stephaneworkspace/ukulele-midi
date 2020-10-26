@@ -10,12 +10,14 @@ edition = "2018"
 ghakuf = "0.5.6"
 byteorder = "1"
 log = "0.4"
+
+[dev-dependencies]
 chartgeneratorsvg = { git = "ssh://git@github.com/stephaneworkspace/chartgeneratorsvg.git" }
 
 [dependencies.synthrs]
 git = "ssh://git@github.com/stephaneworkspace/synthrs.git"
 rev = "265ca00"
 
-[dependencies.sdl2]
+[dev-dependencies.sdl2]
 #features = ["use_mac_framework"]
 version = "0.34.3"
