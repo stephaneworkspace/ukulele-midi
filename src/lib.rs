@@ -31,8 +31,8 @@ impl<'a> SoundBytes<'a> {
         }
     }
 
-    pub fn base64_wav(&self) -> String {
-        encode(&self.wav)
+    pub fn encode_base64_wav(&self) -> String {
+        format!("data:audio/wav;base64,{}", encode(&self.wav))
     }
 
     /// Generate midi in reference

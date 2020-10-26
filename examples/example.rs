@@ -1,13 +1,8 @@
-extern crate sdl2;
-
-use std::thread;
-
-use sdl2::audio::{AudioCallback, AudioSpecDesired, AudioSpecWAV};
-
-use ukulele_midi::SoundBytes;
-
 use chartgeneratorsvg::interface::InterfaceWasm;
 use chartgeneratorsvg::interface::TraitChord;
+use sdl2::audio::{AudioCallback, AudioSpecDesired, AudioSpecWAV};
+use std::thread;
+use ukulele_midi::SoundBytes;
 
 fn ext() -> Vec<u8> {
     InterfaceWasm::chord_list_experimental("F", "m", 0 as u8)
@@ -27,7 +22,7 @@ fn main() {
         Err(err) => panic!("Error: {}", err),
     };
 
-    println!("{}", sb.base64_wav());
+    // println!("{}", sb.encode_base64_wav());
 
     let sdl_context = sdl2::init().unwrap();
     let audio_system = sdl_context.audio().unwrap();
@@ -37,9 +32,8 @@ fn main() {
         channels: None,
         samples: None,
     };
-    //let rw_ops = RWops::from_bytes(&midi.wav).unwrap(); // TODO .?
-    //let audio_wav = AudioSpecWAV::load_wav_rw(&_rw_ops).unwrap();
 
+    // Add this code audio convert (AudioCVT)for remove distorion
     let copied_data = CopiedData {
         bytes: sdl2::audio::AudioCVT::new(
             sdl2::audio::AudioFormat::S16LSB, //wav.format,
