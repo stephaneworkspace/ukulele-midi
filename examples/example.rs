@@ -2,7 +2,7 @@ use chartgeneratorsvg::interface::InterfaceWasm;
 use chartgeneratorsvg::interface::TraitChord;
 use sdl2::audio::{AudioCallback, AudioSpecDesired, AudioSpecWAV};
 use std::thread;
-use ukulele_midi::SoundBytes;
+use ukulele_midi::{SoundBytes, Variant};
 
 fn ext() -> Vec<u8> {
     InterfaceWasm::chord_list_experimental("F", "m", 0 as u8)
@@ -17,7 +17,7 @@ fn main() {
         midi: &mut Vec::new(),
         wav: &mut Vec::new(),
     };
-    match sb.generate() {
+    match sb.generate(Variant::Chord) {
         Ok(()) => println!("Ok"),
         Err(err) => panic!("Error: {}", err),
     };

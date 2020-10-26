@@ -29,12 +29,16 @@ impl<'a> Chord for Ukulele<'a> {
             });
         }
         for (i, s) in self.semitones.iter().enumerate() {
+            let delta_time: u32 = match i {
+                0 => INTERVAL_MIDI * 2,
+                _ => 0,
+            };
             write_messages.push(Message::MidiEvent {
-                delta_time: INTERVAL_MIDI,
+                delta_time,
                 event: MidiEvent::NoteOn {
                     ch: i as u8,
                     note: s.clone(),
-                    velocity: 0,
+                    velocity: 0x00,
                 },
             });
         }
