@@ -27,6 +27,8 @@ fn main() {
         Err(err) => panic!("Error: {}", err),
     };
 
+    println!("{}", sb.base64_wav());
+
     let sdl_context = sdl2::init().unwrap();
     let audio_system = sdl_context.audio().unwrap();
 

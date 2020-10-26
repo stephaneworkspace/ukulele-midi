@@ -6,6 +6,7 @@ pub mod hodge;
 pub mod synthrs_customize;
 pub mod ukulele;
 
+use base64::encode;
 use ghakuf::messages::*;
 use ghakuf_customize::writer::*;
 use std::io::Cursor;
@@ -28,6 +29,10 @@ impl<'a> SoundBytes<'a> {
             Ok(()) => self.generate_wav(),
             Err(err) => Err(err),
         }
+    }
+
+    pub fn base64_wav(&self) -> String {
+        encode(&self.wav)
     }
 
     /// Generate midi in reference
