@@ -12,13 +12,6 @@ byteorder = "1"
 log = "0.4"
 base64 = "0.13.0"
 
-[dev-dependencies]
-chartgeneratorsvg = { git = "ssh://git@github.com/stephaneworkspace/chartgeneratorsvg.git" }
-
 [dependencies.synthrs]
-git = "ssh://git@github.com/stephaneworkspace/synthrs.git"
+git = "https://github.com/stephaneworkspace/synthrs"
 rev = "265ca00"
-
-[dev-dependencies.sdl2]
-#features = ["use_mac_framework"]
-version = "0.34.3"

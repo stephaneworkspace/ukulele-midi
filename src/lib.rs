@@ -12,6 +12,7 @@ use ghakuf_customize::writer::*;
 use std::io::Cursor;
 use std::str::FromStr;
 use synthrs::midi;
+use synthrs::sample;
 use synthrs::synthesizer::{make_samples_from_midi, quantize_samples};
 use synthrs::wave;
 use synthrs_customize::write_wav_buffer;
@@ -112,6 +113,27 @@ impl<'a> SoundBytes<'a> {
         Ok(writer.write_buffer(&mut self.midi)?)
     }
 
+    /*
+    pub fn compress(&self) {
+        let mut input = BufReader::new(
+            std::fs::File::open("assets/ukulele-a-440.wav").unwrap(),
+        );
+        let output = std::fs::File::create("ukulele.gz").unwrap();
+        let mut encoder = flate2::write::GzEncoder::new(
+            output,
+            flate2::Compression::default(),
+        );
+        let start = std::time::Instant::now();
+        std::io::copy(&mut input, &mut encoder).unwrap();
+        let output = encoder.finish().unwrap();
+        println!(
+            "Source len: {:?}",
+            input.get_ref().metadata().unwrap().len()
+        );
+        println!("Target len: {:?}", output.metadata().unwrap().len());
+        println!("Elapsed: {:?}", start.elapsed());
+    }*/
+
     /// Generate wav in reference
     fn generate_wav(&mut self) -> Result<(), std::io::Error> {
         let midi_u8: &[u8] = &self.midi;
@@ -119,11 +141,22 @@ impl<'a> SoundBytes<'a> {
 
         let song = midi::read_midi(&mut cursor).unwrap();
 
+        let (ukulele_sample, ukulele_sample_len) =
+            sample::samples_from_wave_file("assets/ukulele-a-440.wav").unwrap();
+        let ukulele_sampler = |frequency: f64| {
+            wave::sampler(
+                frequency,
+                &ukulele_sample,
+                ukulele_sample_len,
+                440.0,
+                44_100,
+            )
+        };
         write_wav_buffer(
             &mut self.wav,
             44_100,
             &quantize_samples::<i16>(
-                &make_samples_from_midi(wave::square_wave, 44_100, false, song)
+                &make_samples_from_midi(ukulele_sampler, 44_100, false, song)
                     .unwrap(),
             ),
         )
