@@ -1,14 +1,17 @@
 #[macro_use]
 extern crate log;
 
+pub mod asset;
 pub mod ghakuf_customize;
 pub mod hodge;
 pub mod synthrs_customize;
 pub mod ukulele;
 
+use asset::UKULELE;
 use base64::encode;
 use ghakuf::messages::*;
 use ghakuf_customize::writer::*;
+use std::io::prelude::*; // dev dep
 use std::io::Cursor;
 use std::str::FromStr;
 use synthrs::midi;
@@ -53,6 +56,8 @@ pub struct SoundBytes<'a> {
 
 impl<'a> SoundBytes<'a> {
     /// Generate midi + wav in reference
+    /// DONT WORK !!!
+    /// TODO
     pub fn generate(
         &mut self,
         variant: Variant,
@@ -64,7 +69,7 @@ impl<'a> SoundBytes<'a> {
         }
     }
 
-    pub fn generate_from_file(
+    pub fn generate_from_base64(
         &mut self,
         variant: Variant,
     ) -> Result<(), std::io::Error> {
@@ -72,6 +77,30 @@ impl<'a> SoundBytes<'a> {
             Ok(()) => self.generate_wav(),
             Err(err) => Err(err),
         }
+    }
+
+    /// Generate base64 for the waveform of the sampled ukulele C note
+    /// Dev-depency, in wasm (for example) is not so easy for acces to assets
+    pub fn generate_sample_base64(&self) -> std::io::Result<()> {
+        let path = std::path::Path::new("assets/ukulele-a-440.wav");
+        let file = std::fs::File::open(path)?;
+        let mut reader = std::io::BufReader::new(file);
+        //let mut buffer: Vec<u8> = Vec::new();
+        //reader.read_to_end(&mut buffer)?;
+        //println!("{:?}", encode(&reader.buffer()));
+
+        let mut out = Vec::new();
+        reader.read_to_end(&mut out).unwrap();
+
+        println!("{}", encode(&out));
+
+        //reader.flush()?;
+        Ok(())
+    }
+
+    pub fn decode_sample_base64(&self) -> Vec<u8> {
+        let decode: Vec<u8> = base64::decode(UKULELE).unwrap();
+        decode
     }
 
     pub fn encode_base64_wav(&self) -> String {
@@ -156,7 +185,10 @@ impl<'a> SoundBytes<'a> {
         let song = midi::read_midi(&mut cursor).unwrap();
 
         let (ukulele_sample, ukulele_sample_len) =
-            sample::samples_from_wave_file("assets/ukulele-a-440.wav").unwrap();
+            sample::samples_from_wave_bytes(self.decode_sample_base64())
+                .unwrap();
+        //let (ukulele_sample, ukulele_sample_len) =
+        //    sample::samples_from_wave_file("assets/ukulele-a-440.wav").unwrap();
         let ukulele_sampler = |frequency: f64| {
             wave::sampler(
                 frequency,
