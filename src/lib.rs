@@ -56,7 +56,7 @@ impl<'a> SoundBytes<'a> {
     pub fn generate(
         &mut self,
         variant: Variant,
-        sample_ukulele: &[u8],
+        sample_ukulele: Box<[u8]>,
     ) -> Result<(), std::io::Error> {
         match self.generate_midi(variant) {
             Ok(()) => self.generate_wav_from_buffer(sample_ukulele),
@@ -177,9 +177,10 @@ impl<'a> SoundBytes<'a> {
         .expect("failed"); // TODO better
         Ok(())
     }
+
     fn generate_wav_from_buffer(
         &mut self,
-        sample: &[u8],
+        sample: Box<[u8]>,
     ) -> Result<(), std::io::Error> {
         let midi_u8: &[u8] = &self.midi;
         let mut cursor = Cursor::new(midi_u8);
