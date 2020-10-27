@@ -64,7 +64,7 @@ impl<'a> SoundBytes<'a> {
         }
     }
 
-    pub fn generate_from_files(
+    pub fn generate_from_file(
         &mut self,
         variant: Variant,
     ) -> Result<(), std::io::Error> {

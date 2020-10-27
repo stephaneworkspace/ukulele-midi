@@ -6,7 +6,7 @@ fn main() {
         midi: &mut Vec::new(),
         wav: &mut Vec::new(),
     };
-    match sb.generate_from_files(Variant::Arp8) {
+    match sb.generate_from_file(Variant::Arp8) {
         Ok(()) => println!(
             "<html><body><audio controls src=\"{}\" /></body></html>",
             sb.encode_base64_wav()
