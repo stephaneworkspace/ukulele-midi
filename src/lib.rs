@@ -53,7 +53,21 @@ pub struct SoundBytes<'a> {
 
 impl<'a> SoundBytes<'a> {
     /// Generate midi + wav in reference
-    pub fn generate(&mut self, variant: Variant) -> Result<(), std::io::Error> {
+    pub fn generate(
+        &mut self,
+        variant: Variant,
+        sample_ukulele: &[u8],
+    ) -> Result<(), std::io::Error> {
+        match self.generate_midi(variant) {
+            Ok(()) => self.generate_wav_from_buffer(sample_ukulele),
+            Err(err) => Err(err),
+        }
+    }
+
+    pub fn generate_from_files(
+        &mut self,
+        variant: Variant,
+    ) -> Result<(), std::io::Error> {
         match self.generate_midi(variant) {
             Ok(()) => self.generate_wav(),
             Err(err) => Err(err),
@@ -143,6 +157,37 @@ impl<'a> SoundBytes<'a> {
 
         let (ukulele_sample, ukulele_sample_len) =
             sample::samples_from_wave_file("assets/ukulele-a-440.wav").unwrap();
+        let ukulele_sampler = |frequency: f64| {
+            wave::sampler(
+                frequency,
+                &ukulele_sample,
+                ukulele_sample_len,
+                440.0,
+                44_100,
+            )
+        };
+        write_wav_buffer(
+            &mut self.wav,
+            44_100,
+            &quantize_samples::<i16>(
+                &make_samples_from_midi(ukulele_sampler, 44_100, false, song)
+                    .unwrap(),
+            ),
+        )
+        .expect("failed"); // TODO better
+        Ok(())
+    }
+    fn generate_wav_from_buffer(
+        &mut self,
+        sample: &[u8],
+    ) -> Result<(), std::io::Error> {
+        let midi_u8: &[u8] = &self.midi;
+        let mut cursor = Cursor::new(midi_u8);
+
+        let song = midi::read_midi(&mut cursor).unwrap();
+
+        let (ukulele_sample, ukulele_sample_len) =
+            sample::samples_from_wave_bytes(sample.to_vec()).unwrap();
         let ukulele_sampler = |frequency: f64| {
             wave::sampler(
                 frequency,
