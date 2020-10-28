@@ -60,7 +60,7 @@ impl<'a> SoundBytes<'a> {
     pub fn generate_from_sample_base64(
         &mut self,
         variant: Variant,
-        sample_ukulele: &str,
+        sample_ukulele: String,
     ) -> Result<(), std::io::Error> {
         match self.generate_midi(variant) {
             Ok(()) => {
