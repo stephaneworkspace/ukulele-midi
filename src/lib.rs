@@ -57,13 +57,16 @@ pub struct SoundBytes<'a> {
 
 impl<'a> SoundBytes<'a> {
     /// Generate midi + wav in reference from extern sample
-    pub fn generate_from_sample(
+    pub fn generate_from_sample_base64(
         &mut self,
         variant: Variant,
-        sample_ukulele: Box<[u8]>,
+        sample_ukulele: &str,
     ) -> Result<(), std::io::Error> {
         match self.generate_midi(variant) {
-            Ok(()) => self.generate_wav_from_buffer(sample_ukulele.to_vec()),
+            Ok(()) => {
+                let decode: Vec<u8> = base64::decode(sample_ukulele).unwrap();
+                self.generate_wav_from_buffer(decode)
+            }
             Err(err) => Err(err),
         }
     }
