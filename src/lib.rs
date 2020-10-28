@@ -60,10 +60,10 @@ impl<'a> SoundBytes<'a> {
     pub fn generate_from_sample(
         &mut self,
         variant: Variant,
-        sample_ukulele: &[u8],
+        sample_ukulele: Box<[u8]>,
     ) -> Result<(), std::io::Error> {
         match self.generate_midi(variant) {
-            Ok(()) => self.generate_wav_from_buffer(sample_ukulele),
+            Ok(()) => self.generate_wav_from_buffer(sample_ukulele.to_vec()),
             Err(err) => Err(err),
         }
     }
@@ -211,7 +211,7 @@ impl<'a> SoundBytes<'a> {
 
     fn generate_wav_from_buffer(
         &mut self,
-        sample: &[u8],
+        sample: Vec<u8>,
     ) -> Result<(), std::io::Error> {
         let midi_u8: &[u8] = &self.midi;
         let mut cursor = Cursor::new(midi_u8);
@@ -219,7 +219,7 @@ impl<'a> SoundBytes<'a> {
         let song = midi::read_midi(&mut cursor).unwrap();
 
         let (ukulele_sample, ukulele_sample_len) =
-            sample::samples_from_wave_bytes(sample.to_vec()).unwrap();
+            sample::samples_from_wave_bytes(sample).unwrap();
         let ukulele_sampler = |frequency: f64| {
             wave::sampler(
                 frequency,
