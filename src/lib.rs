@@ -60,13 +60,10 @@ impl<'a> SoundBytes<'a> {
     pub fn generate_from_sample_base64(
         &mut self,
         variant: Variant,
-        sample_ukulele: String,
+        sample_ukulele: &[u8],
     ) -> Result<(), std::io::Error> {
         match self.generate_midi(variant) {
-            Ok(()) => {
-                let decode: Vec<u8> = base64::decode(sample_ukulele).unwrap();
-                self.generate_wav_from_buffer(decode)
-            }
+            Ok(()) => self.generate_wav_from_buffer(sample_ukulele.to_vec()),
             Err(err) => Err(err),
         }
     }
