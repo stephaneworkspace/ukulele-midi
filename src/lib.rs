@@ -1,3 +1,4 @@
+///! This library is a little ukulele synthetizer
 #[macro_use]
 extern crate log;
 
@@ -55,13 +56,11 @@ pub struct SoundBytes<'a> {
 }
 
 impl<'a> SoundBytes<'a> {
-    /// Generate midi + wav in reference
-    /// DONT WORK !!!
-    /// TODO
-    pub fn generate(
+    /// Generate midi + wav in reference from extern sample
+    pub fn generate_from_sample(
         &mut self,
         variant: Variant,
-        sample_ukulele: Box<[u8]>,
+        sample_ukulele: &[u8],
     ) -> Result<(), std::io::Error> {
         match self.generate_midi(variant) {
             Ok(()) => self.generate_wav_from_buffer(sample_ukulele),
@@ -212,7 +211,7 @@ impl<'a> SoundBytes<'a> {
 
     fn generate_wav_from_buffer(
         &mut self,
-        sample: Box<[u8]>,
+        sample: &[u8],
     ) -> Result<(), std::io::Error> {
         let midi_u8: &[u8] = &self.midi;
         let mut cursor = Cursor::new(midi_u8);
