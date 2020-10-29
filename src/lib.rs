@@ -75,12 +75,6 @@ impl<'a> SoundBytes<'a> {
         }
     }
 
-    /* Deprecate
-    pub fn encode_base64_wav(&self) -> String {
-        format!("data:audio/wav;base64,{}", encode(&self.wav))
-    }
-    */
-
     /// Set midi buffer (self.midi)
     fn set_midi(&mut self, variant: Variant) -> Result<(), std::io::Error> {
         // sample messages
