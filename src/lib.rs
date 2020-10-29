@@ -7,10 +7,8 @@ pub mod hodge;
 pub mod synthrs_customize;
 pub mod ukulele;
 
-use base64::encode;
 use ghakuf::messages::*;
 use ghakuf_customize::writer::*;
-use std::io::prelude::*; // dev dep
 use std::io::Cursor;
 use std::str::FromStr;
 use synthrs::midi;
@@ -54,46 +52,37 @@ pub struct SoundBytes<'a> {
 }
 
 impl<'a> SoundBytes<'a> {
-    /// Generate midi + wav in reference from extern sample
-    pub fn generate_from_sample_base64(
+    /// Generate midi + wav in reference from extern sample buffer
+    pub fn generate_from_buffer(
         &mut self,
         variant: Variant,
         sample_ukulele: Box<[u8]>,
     ) -> Result<(), std::io::Error> {
-        match self.generate_midi(variant) {
-            Ok(()) => self.generate_wav_from_buffer(sample_ukulele.to_vec()),
+        match self.set_midi(variant) {
+            Ok(()) => self.set_wav_from_buffer(sample_ukulele.to_vec()),
             Err(err) => Err(err),
         }
     }
 
-    /// Generate base64 for the waveform of the sampled ukulele C note
-    /// Dev-depency, in wasm (for example) is not so easy for acces to assets
-    pub fn generate_sample_base64(&self) -> std::io::Result<()> {
-        let path = std::path::Path::new("assets/ukulele-a-440.wav");
-        let file = std::fs::File::open(path)?;
-        let mut reader = std::io::BufReader::new(file);
-        //let mut buffer: Vec<u8> = Vec::new();
-        //reader.read_to_end(&mut buffer)?;
-        //println!("{:?}", encode(&reader.buffer()));
-
-        let mut out = Vec::new();
-        reader.read_to_end(&mut out).unwrap();
-
-        println!("{}", encode(&out));
-
-        //reader.flush()?;
-        Ok(())
-    }
-
-    pub fn encode_base64_wav(&self) -> String {
-        format!("data:audio/wav;base64,{}", encode(&self.wav))
-    }
-
-    /// Generate midi in reference
-    fn generate_midi(
+    /// Generate midi + wav in reference from extern sample buffer
+    pub fn generate_from_local_asset(
         &mut self,
         variant: Variant,
     ) -> Result<(), std::io::Error> {
+        match self.set_midi(variant) {
+            Ok(()) => self.set_wav_from_local_asset(),
+            Err(err) => Err(err),
+        }
+    }
+
+    /* Deprecate
+    pub fn encode_base64_wav(&self) -> String {
+        format!("data:audio/wav;base64,{}", encode(&self.wav))
+    }
+    */
+
+    /// Set midi buffer (self.midi)
+    fn set_midi(&mut self, variant: Variant) -> Result<(), std::io::Error> {
         // sample messages
         let tempo: u32 = 60 * 1000000 / 102; // bpm: 102
         let mut write_messages: Vec<Message> = Vec::new();
@@ -138,28 +127,8 @@ impl<'a> SoundBytes<'a> {
         Ok(writer.write_buffer(&mut self.midi)?)
     }
 
-    /*
-    pub fn compress(&self) {
-        let mut input = BufReader::new(
-            std::fs::File::open("assets/ukulele-a-440.wav").unwrap(),
-        );
-        let output = std::fs::File::create("ukulele.gz").unwrap();
-        let mut encoder = flate2::write::GzEncoder::new(
-            output,
-            flate2::Compression::default(),
-        );
-        let start = std::time::Instant::now();
-        std::io::copy(&mut input, &mut encoder).unwrap();
-        let output = encoder.finish().unwrap();
-        println!(
-            "Source len: {:?}",
-            input.get_ref().metadata().unwrap().len()
-        );
-        println!("Target len: {:?}", output.metadata().unwrap().len());
-        println!("Elapsed: {:?}", start.elapsed());
-    }*/
-
-    fn generate_wav_from_buffer(
+    /// Set wave buffer (self.wav) from sample buffer
+    fn set_wav_from_buffer(
         &mut self,
         sample: Vec<u8>,
     ) -> Result<(), std::io::Error> {
@@ -189,6 +158,41 @@ impl<'a> SoundBytes<'a> {
         )
         .expect("failed"); // TODO better
         Ok(())
+    }
+
+    /// Set wave buffer (self.wav) from local asset
+    fn set_wav_from_local_asset(&mut self) -> Result<(), std::io::Error> {
+        let midi_u8: &[u8] = &self.midi;
+        let mut cursor = Cursor::new(midi_u8);
+
+        let song = midi::read_midi(&mut cursor).unwrap();
+
+        let (ukulele_sample, ukulele_sample_len) =
+            sample::samples_from_wave_file("assets/ukulele-a-440.wav").unwrap();
+        let ukulele_sampler = |frequency: f64| {
+            wave::sampler(
+                frequency,
+                &ukulele_sample,
+                ukulele_sample_len,
+                440.0,
+                44_100,
+            )
+        };
+        write_wav_buffer(
+            &mut self.wav,
+            44_100,
+            &quantize_samples::<i16>(
+                &make_samples_from_midi(ukulele_sampler, 44_100, false, song)
+                    .unwrap(),
+            ),
+        )
+        .expect("failed"); // TODO better
+        Ok(())
+    }
+
+    /// Get wav buffer
+    pub fn get_wav(&self) -> &[u8] {
+        &self.wav[..]
     }
 }
 

@@ -10,7 +10,6 @@ edition = "2018"
 ghakuf = "0.5.6"
 byteorder = "1"
 log = "0.4"
-base64 = "0.13.0"
 
 [dependencies.synthrs]
 git = "https://github.com/stephaneworkspace/synthrs"
