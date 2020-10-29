@@ -2,13 +2,11 @@
 #[macro_use]
 extern crate log;
 
-pub mod asset;
 pub mod ghakuf_customize;
 pub mod hodge;
 pub mod synthrs_customize;
 pub mod ukulele;
 
-use asset::UKULELE;
 use base64::encode;
 use ghakuf::messages::*;
 use ghakuf_customize::writer::*;
@@ -68,16 +66,6 @@ impl<'a> SoundBytes<'a> {
         }
     }
 
-    pub fn generate_from_base64(
-        &mut self,
-        variant: Variant,
-    ) -> Result<(), std::io::Error> {
-        match self.generate_midi(variant) {
-            Ok(()) => self.generate_wav(),
-            Err(err) => Err(err),
-        }
-    }
-
     /// Generate base64 for the waveform of the sampled ukulele C note
     /// Dev-depency, in wasm (for example) is not so easy for acces to assets
     pub fn generate_sample_base64(&self) -> std::io::Result<()> {
@@ -95,11 +83,6 @@ impl<'a> SoundBytes<'a> {
 
         //reader.flush()?;
         Ok(())
-    }
-
-    pub fn decode_sample_base64(&self) -> Vec<u8> {
-        let decode: Vec<u8> = base64::decode(UKULELE).unwrap();
-        decode
     }
 
     pub fn encode_base64_wav(&self) -> String {
@@ -175,39 +158,6 @@ impl<'a> SoundBytes<'a> {
         println!("Target len: {:?}", output.metadata().unwrap().len());
         println!("Elapsed: {:?}", start.elapsed());
     }*/
-
-    /// Generate wav in reference
-    fn generate_wav(&mut self) -> Result<(), std::io::Error> {
-        let midi_u8: &[u8] = &self.midi;
-        let mut cursor = Cursor::new(midi_u8);
-
-        let song = midi::read_midi(&mut cursor).unwrap();
-
-        let (ukulele_sample, ukulele_sample_len) =
-            sample::samples_from_wave_bytes(self.decode_sample_base64())
-                .unwrap();
-        //let (ukulele_sample, ukulele_sample_len) =
-        //    sample::samples_from_wave_file("assets/ukulele-a-440.wav").unwrap();
-        let ukulele_sampler = |frequency: f64| {
-            wave::sampler(
-                frequency,
-                &ukulele_sample,
-                ukulele_sample_len,
-                440.0,
-                44_100,
-            )
-        };
-        write_wav_buffer(
-            &mut self.wav,
-            44_100,
-            &quantize_samples::<i16>(
-                &make_samples_from_midi(ukulele_sampler, 44_100, false, song)
-                    .unwrap(),
-            ),
-        )
-        .expect("failed"); // TODO better
-        Ok(())
-    }
 
     fn generate_wav_from_buffer(
         &mut self,
