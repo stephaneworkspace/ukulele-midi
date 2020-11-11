@@ -18,6 +18,9 @@ use synthrs::wave;
 use synthrs_customize::write_wav_buffer;
 pub use ukulele::{ArpPatern, Arpegiator, Chord, Ukulele};
 
+// Repetition of the patern
+const REPEAT: u32 = 1;
+
 // Custom error for variant string
 #[derive(Debug)]
 pub struct ParseVariantError {
@@ -100,12 +103,13 @@ impl<'a> SoundBytes<'a> {
             Variant::Arp8 => {
                 write_messages.append(
                     &mut ukulele
-                        .arp(ArpPatern::OneThreeTwoThreeFourThreeTwo, 4),
+                        .arp(ArpPatern::OneThreeTwoThreeFourThreeTwo, REPEAT),
                 );
             }
             Variant::Arp4 => {
-                write_messages
-                    .append(&mut ukulele.arp(ArpPatern::OneTwoThreeFour, 4));
+                write_messages.append(
+                    &mut ukulele.arp(ArpPatern::OneTwoThreeFour, REPEAT),
+                );
             }
         }
         write_messages.push(Message::MetaEvent {
