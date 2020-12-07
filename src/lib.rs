@@ -83,7 +83,7 @@ impl<'a> SoundBytes<'a> {
     /// Set midi buffer (self.midi)
     fn set_midi(&mut self, variant: Variant) -> Result<(), std::io::Error> {
         // sample messages
-        let tempo: u32 = 60 * 1000000 / 82; // bpm: 102
+        let tempo: u32 = 60 * 1000000 / 102; // bpm: 102
         let mut write_messages: Vec<Message> = Vec::new();
         write_messages.push(Message::MetaEvent {
             delta_time: 0,
