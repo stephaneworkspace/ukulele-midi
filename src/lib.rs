@@ -31,6 +31,7 @@ pub enum Variant {
     Chord,
     Arp8,
     Arp4,
+    OneNote,
 }
 
 impl FromStr for Variant {
@@ -41,6 +42,7 @@ impl FromStr for Variant {
             "chord" => Ok(Chord),
             "arp8" => Ok(Arp8),
             "arp4" => Ok(Arp4),
+            "one_note" => Ok(OneNote),
             _ => Err(ParseVariantError {
                 name: s.to_string(),
             }),
@@ -99,18 +101,20 @@ impl<'a> SoundBytes<'a> {
         match variant {
             Variant::Chord => {
                 write_messages.append(&mut ukulele.chord());
-            }
+            },
             Variant::Arp8 => {
                 write_messages.append(
                     &mut ukulele
                         .arp(ArpPatern::OneThreeTwoThreeFourThreeTwo, REPEAT),
                 );
-            }
+            },
             Variant::Arp4 => {
                 write_messages.append(
                     &mut ukulele.arp(ArpPatern::OneTwoThreeFour, REPEAT),
                 );
-            }
+            },
+            Variant::OneNote => write_messages
+                .append(&mut ukulele.arp(ArpPatern::OneNote, REPEAT)),
         }
         write_messages.push(Message::MetaEvent {
             delta_time: 0,

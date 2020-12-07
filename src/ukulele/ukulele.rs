@@ -47,6 +47,7 @@ impl<'a> Chord for Ukulele<'a> {
 }
 
 pub enum ArpPatern {
+    OneNote,
     OneTwoThreeFour,
     OneThreeTwoThreeFourThreeTwo,
 }
@@ -57,10 +58,11 @@ impl ArpPatern {
     fn pattern(&self) -> Vec<UkuleleString> {
         match self {
             // TODO check number of string in &[u8]
+            ArpPatern::OneNote => vec![1],
             ArpPatern::OneTwoThreeFour => vec![1, 2, 3, 4],
             ArpPatern::OneThreeTwoThreeFourThreeTwo => {
                 vec![1, 3, 2, 3, 4, 3, 2, 3]
-            }
+            },
         }
         .iter()
         .map(|x| x - 1)
